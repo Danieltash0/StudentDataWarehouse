@@ -1,7 +1,7 @@
 import pandas as pd
 from pathlib import Path
 
-BASE_DIR = Path(__file__).parent.parent  # Go up from etl_pipeline/ to src/
+BASE_DIR = Path(__file__).parent.parent 
 DATA_DIR = BASE_DIR / "data" / "raw"
 
 def extract_raw_data():
@@ -16,7 +16,7 @@ def extract_raw_data():
 
     raw_df = pd.concat([mat_df, por_df], ignore_index=True)
 
-    # Debug safety check (keep this for now)
+    # Debug safety check 
     #print("RAW COLUMNS AFTER EXTRACT:", raw_df.columns.tolist())
 
     return raw_df

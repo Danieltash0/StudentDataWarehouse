@@ -1,10 +1,7 @@
-# -----------------------------
-# Transform raw data
-# -----------------------------
 def transform_data(raw_df):
     df = raw_df.copy()
 
-    # Normalize column names
+    # Normalizing the column names
     df.columns = (
         df.columns
         .str.strip()
@@ -29,9 +26,7 @@ def transform_data(raw_df):
     return df
 
 
-# -----------------------------
-# Dimension builders
-# -----------------------------
+# Dimensions
 def build_dim_student(df):
     cols = ["sex", "age", "address", "guardian", "romantic"]
     return (
@@ -75,10 +70,7 @@ def build_dim_school(df):
         .reset_index(drop=True)
     )
 
-
-# -----------------------------
-# FACT builder (🔥 THE FIX)
-# -----------------------------
+#The fact table is built 
 def build_fact_student_performance(
     df, dim_student, dim_family, dim_school, dim_subject
 ):
