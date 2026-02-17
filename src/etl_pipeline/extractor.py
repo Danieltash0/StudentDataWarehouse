@@ -1,11 +1,13 @@
 import pandas as pd
 
-def extract_raw_data():
-    mat_df = pd.read_csv("data/raw/student-mat.csv", sep=";")
-    por_df = pd.read_csv("data/raw/student-por.csv", sep=";")
+def extract_data():
+    df_mat = pd.read_csv("data/raw/student-mat.csv", sep=",")
+    df_por = pd.read_csv("data/raw/student-por.csv", sep=",")
 
-    mat_df["subject_name"] = "Math"
-    por_df["subject_name"] = "Portuguese"
+    #print("MAT COLUMNS:", df_mat.columns.tolist())
+    #print("POR COLUMNS:", df_por.columns.tolist())
 
-    raw_df = pd.concat([mat_df, por_df], ignore_index=True)
-    return raw_df
+    df_mat["subject_name"] = "Math"
+    df_por["subject_name"] = "Portuguese"
+    df = pd.concat([df_mat, df_por], ignore_index=True)
+    return df
