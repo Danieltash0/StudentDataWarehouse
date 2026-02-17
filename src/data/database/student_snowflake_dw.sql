@@ -35,7 +35,7 @@ CREATE TABLE dim_subject (
 
 CREATE TABLE dim_school (
     school_id INT AUTO_INCREMENT PRIMARY KEY,
-    school_code VARCHAR(10),
+    school VARCHAR(100),
     region_id INT,
     FOREIGN KEY (region_id)
         REFERENCES dim_region(region_id)
