@@ -1,7 +1,0 @@
-README.md
-setup.py
-DataWarehouseExp.egg-info/PKG-INFO
-DataWarehouseExp.egg-info/SOURCES.txt
-DataWarehouseExp.egg-info/dependency_links.txt
-DataWarehouseExp.egg-info/requires.txt
-DataWarehouseExp.egg-info/top_level.txt

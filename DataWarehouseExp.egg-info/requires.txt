@@ -1,7 +1,0 @@
-pandas>=2.0.0
-numpy>=1.20.0
-sqlalchemy>=2.0.0
-flask>=2.0.0
-plotly>=5.0.0
-dash>=2.0.0
-python-dotenv>=1.0.0
