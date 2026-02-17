@@ -1,8 +1,9 @@
-# DataWarehouseExp
-This repo was made to get the scope and technicalities of data warehousing, like how to implement it for seperate data set entry and how to incorporate data visualisation for analysis, predictive modelling or just better storage.
-It demonstrates the core concepts of data warehouse infrastructure, focusing on the ETL process. 
-The ETL process, showcasd in this repo, that's fundamental to data warehousing involves these steps: 
-- Extract: Data is collected from various source systems (raw datasets).
-- Transform: Data is cleaned, formatted, and transformed to meet the storage and analytical requirements here.
-- Load: The processed data is loaded into the data warehouse for querying and analysis.
-  So it basically provides a practical example to help understand and implement ETL workflows and how data flows from raw sources into a structured warehouse environment.
+# Star Schema Warehouse
+This repository contains a Star Schema version of the warehouse designed to analyze student performance across Math and Portuguese subjects. 
+
+The warehouse is built around a central fact table, fact_student_performance, which stores measurable metrics. Surrounding it are denormalized dimension tables (dim_student, dim_family, dim_school, and dim_subject) that connect directly to the fact table through foreign keys. This structure minimizes join complexity and optimizes aggregation performance.
+
+![Alt text](starschema.png)
+Unlike the Snowflake Schema version, which further normalizes dimension tables into sub-dimensions, the Star Schema keeps dimensions flattened. This reduces the number of joins required during queries, improves dashboard responsiveness, and simplifies business intelligence integration. Given the moderate size and analytical focus of the student datasets, the Star Schema is more optimal because it provides faster query performance, easier maintenance, and simpler BI tool compatibility without unnecessary structural complexity.
+
+This implementation demonstrates efficient dimensional modeling, ETL processing, and dashboard-ready warehouse design tailored for educational analytics.
