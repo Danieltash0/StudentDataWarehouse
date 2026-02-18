@@ -1,85 +1,133 @@
+DROP DATABASE IF EXISTS stud_constellation_dw;
+CREATE DATABASE stud_constellation_dw;
+USE stud_constellation_dw;
+
 CREATE TABLE dim_student (
-    student_id  INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    sex         CHAR(1) CHECK (sex IN ('M', 'F')),
-    age         INT CHECK (age BETWEEN 15 AND 22),
-    address     CHAR(1) CHECK (address IN ('U', 'R')),
-    guardian    VARCHAR(20),
-    romantic    BOOLEAN
+    student_key INT AUTO_INCREMENT PRIMARY KEY,
+    school VARCHAR(2) NOT NULL,              -- GP, MS
+    sex CHAR(1) NOT NULL,                    -- F, M
+    age TINYINT NOT NULL,                    -- 15–22
+    address CHAR(1),                         -- U, R
+    famsize VARCHAR(3),                      -- LE3, GT3
+    pstatus CHAR(1),                         -- T, A
+    guardian VARCHAR(10)                     -- mother, father, other
 );
 
 
-CREATE TABLE dim_family (
-    family_id   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    famsize     VARCHAR(4) CHECK (famsize IN ('LE3', 'GT3')),
-    pstatus     CHAR(1) CHECK (pstatus IN ('T', 'A')),
-    medu        INT CHECK (medu BETWEEN 0 AND 4),
-    fedu        INT CHECK (fedu BETWEEN 0 AND 4),
-    mjob        VARCHAR(30),
-    fjob        VARCHAR(30),
-    famrel     INT CHECK (famrel BETWEEN 1 AND 5),
-    famsup     BOOLEAN
+/* ---------------------------
+   dim_parent_education
+---------------------------- */
+CREATE TABLE dim_parent_education (
+    parent_edu_key INT AUTO_INCREMENT PRIMARY KEY,
+    Medu TINYINT,
+    Fedu TINYINT
 );
 
 
-CREATE TABLE dim_school (
-    school_id   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    school_code CHAR(2) CHECK (school_code IN ('GP', 'MS')),
-    reason      VARCHAR(30),
-    schoolsup   BOOLEAN,
-    paid        BOOLEAN,
-    activities  BOOLEAN,
-    nursery     BOOLEAN,
-    higher      BOOLEAN,
-    internet    BOOLEAN
+/* ---------------------------
+   dim_parent_job
+---------------------------- */
+CREATE TABLE dim_parent_job (
+    parent_job_key INT AUTO_INCREMENT PRIMARY KEY,
+    Mjob VARCHAR(20),
+    Fjob VARCHAR(20)
 );
 
 
+/* ---------------------------
+   dim_school_reason
+---------------------------- */
+CREATE TABLE dim_school_reason (
+    reason_key INT AUTO_INCREMENT PRIMARY KEY,
+    reason VARCHAR(20)   -- home, reputation, course, other
+);
+
+
+/* ---------------------------
+   dim_academic_support
+---------------------------- */
+CREATE TABLE dim_academic_support (
+    support_key INT AUTO_INCREMENT PRIMARY KEY,
+    schoolsup BOOLEAN,
+    famsup BOOLEAN,
+    paid BOOLEAN
+);
+
+
+/* ---------------------------
+   dim_student_lifestyle
+---------------------------- */
+CREATE TABLE dim_student_lifestyle (
+    lifestyle_key INT AUTO_INCREMENT PRIMARY KEY,
+    traveltime TINYINT,
+    studytime TINYINT,
+    failures TINYINT,
+    activities BOOLEAN,
+    nursery BOOLEAN,
+    higher BOOLEAN,
+    internet BOOLEAN,
+    romantic BOOLEAN
+);
+
+
+/* ---------------------------
+   dim_behavior_health
+---------------------------- */
+CREATE TABLE dim_behavior_health (
+    behavior_key INT AUTO_INCREMENT PRIMARY KEY,
+    famrel TINYINT,
+    freetime TINYINT,
+    goout TINYINT,
+    Dalc TINYINT,
+    Walc TINYINT,
+    health TINYINT
+);
+
+
+/* ---------------------------
+   dim_subject
+---------------------------- */
 CREATE TABLE dim_subject (
-    subject_id      INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    subject_name    VARCHAR(50) NOT NULL UNIQUE
+    subject_key INT AUTO_INCREMENT PRIMARY KEY,
+    subject_name VARCHAR(20)  -- Math, Portuguese
 );
+
+
 
 
 CREATE TABLE fact_student_performance (
-    performance_id INT AUTO_INCREMENT PRIMARY KEY,
+    performance_key INT AUTO_INCREMENT PRIMARY KEY,
 
-    -- Foreign Keys
-    student_id INT NOT NULL,
-    family_id  INT NOT NULL,
-    school_id  INT NOT NULL,
-    subject_id INT NOT NULL,
+    student_key INT NOT NULL,
+    subject_key INT NOT NULL,
+    parent_edu_key INT,
+    parent_job_key INT,
+    reason_key INT,
+    support_key INT,
 
-    -- Academic & behavioral measures
-    traveltime INT CHECK (traveltime BETWEEN 1 AND 4),
-    studytime  INT CHECK (studytime BETWEEN 1 AND 4),
-    failures   INT CHECK (failures BETWEEN 0 AND 4),
+    G1 TINYINT,
+    G2 TINYINT,
+    G3 TINYINT,
 
-    freetime   INT CHECK (freetime BETWEEN 1 AND 5),
-    goout      INT CHECK (goout BETWEEN 1 AND 5),
-
-    dalc       INT CHECK (dalc BETWEEN 1 AND 5),
-    walc       INT CHECK (walc BETWEEN 1 AND 5),
-    health     INT CHECK (health BETWEEN 1 AND 5),
-
-    absences   INT CHECK (absences BETWEEN 0 AND 93),
-
-    g1         INT CHECK (g1 BETWEEN 0 AND 20),
-    g2         INT CHECK (g2 BETWEEN 0 AND 20),
-    g3         INT CHECK (g3 BETWEEN 0 AND 20),
-
-
-    CONSTRAINT fk_student
-        FOREIGN KEY (student_id) REFERENCES dim_student(student_id),
-
-    CONSTRAINT fk_family
-        FOREIGN KEY (family_id) REFERENCES dim_family(family_id),
-
-    CONSTRAINT fk_school
-        FOREIGN KEY (school_id) REFERENCES dim_school(school_id),
-
-    CONSTRAINT fk_subject
-        FOREIGN KEY (subject_id) REFERENCES dim_subject(subject_id),
-
-    CONSTRAINT uq_student_subject UNIQUE (student_id, subject_id)
+    FOREIGN KEY (student_key) REFERENCES dim_student(student_key),
+    FOREIGN KEY (subject_key) REFERENCES dim_subject(subject_key),
+    FOREIGN KEY (parent_edu_key) REFERENCES dim_parent_education(parent_edu_key),
+    FOREIGN KEY (parent_job_key) REFERENCES dim_parent_job(parent_job_key),
+    FOREIGN KEY (reason_key) REFERENCES dim_school_reason(reason_key),
+    FOREIGN KEY (support_key) REFERENCES dim_academic_support(support_key)
 );
 
+
+CREATE TABLE fact_student_lifestyle (
+    lifestyle_fact_key INT AUTO_INCREMENT PRIMARY KEY,
+
+    student_key INT NOT NULL,
+    lifestyle_key INT,
+    behavior_key INT,
+
+    absences INT,
+
+    FOREIGN KEY (student_key) REFERENCES dim_student(student_key),
+    FOREIGN KEY (lifestyle_key) REFERENCES dim_student_lifestyle(lifestyle_key),
+    FOREIGN KEY (behavior_key) REFERENCES dim_behavior_health(behavior_key)
+);
