@@ -1,18 +1,7 @@
-/* =========================================================
-   CREATE DATABASE
-========================================================= */
-DROP DATABASE IF EXISTS stud_constellation_dw;
 CREATE DATABASE stud_constellation_dw;
 USE stud_constellation_dw;
 
 
-/* =========================================================
-   DIMENSION TABLES
-========================================================= */
-
-/* ---------------------------
-   dim_student
----------------------------- */
 CREATE TABLE dim_student (
     student_ID INT AUTO_INCREMENT PRIMARY KEY,
     school VARCHAR(2) NOT NULL,
@@ -24,19 +13,11 @@ CREATE TABLE dim_student (
     guardian VARCHAR(10)
 );
 
-
-/* ---------------------------
-   dim_subject
----------------------------- */
 CREATE TABLE dim_subject (
     subject_ID INT AUTO_INCREMENT PRIMARY KEY,
     subject_name VARCHAR(20) NOT NULL
 );
 
-
-/* ---------------------------
-   dim_parent_details
----------------------------- */
 CREATE TABLE dim_parent_details (
     parent_details_ID INT AUTO_INCREMENT PRIMARY KEY,
     Medu TINYINT,
@@ -45,10 +26,6 @@ CREATE TABLE dim_parent_details (
     Fjob VARCHAR(20)
 );
 
-
-/* ---------------------------
-   dim_academic_factors
----------------------------- */
 CREATE TABLE dim_academic_factors (
     academic_factors_ID INT AUTO_INCREMENT PRIMARY KEY,
     reason VARCHAR(20),
@@ -57,17 +34,6 @@ CREATE TABLE dim_academic_factors (
     paid BOOLEAN
 );
 
-
-
-/* =========================================================
-   FACT TABLES
-========================================================= */
-
-
-/* =========================================================
-   FACT 1: PERFORMANCE
-   Grain: One row per student per subject
-========================================================= */
 CREATE TABLE fact_student_performance (
     performance_ID INT AUTO_INCREMENT PRIMARY KEY,
 
@@ -96,12 +62,6 @@ CREATE TABLE fact_student_performance (
         REFERENCES dim_academic_factors(academic_factors_ID)
 );
 
-
-
-/* =========================================================
-   FACT 2: LIFESTYLE
-   Grain: One row per student
-========================================================= */
 CREATE TABLE fact_student_lifestyle (
     lifestyle_ID INT AUTO_INCREMENT PRIMARY KEY,
 

@@ -42,11 +42,7 @@ def transform_data(raw_df):
 
     return df
 
-
-# ===============================
-# DIMENSIONS
-# ===============================
-
+# Dimensions
 def build_dim_student(df):
     cols = [
         "school","sex","age","address",
@@ -74,10 +70,7 @@ def build_dim_academic_factors(df):
     return df[cols].drop_duplicates().reset_index(drop=True)
 
 
-# ===============================
-# FACT TABLES
-# ===============================
-
+#Facts
 def build_fact_student_performance(df):
     cols = [
         "school","sex","age","address","famsize","pstatus","guardian",

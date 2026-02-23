@@ -20,7 +20,7 @@ def run_pipeline():
     raw_df = extract_raw_data()
     clean_df = transform_data(raw_df)
 
-    # Build dimensions
+    # Building dimensions
     dim_student = build_dim_student(clean_df)
     dim_subject = build_dim_subject(clean_df)
     dim_parent_details = build_dim_parent_details(clean_df)
@@ -32,7 +32,7 @@ def run_pipeline():
     load_table(dim_parent_details, "dim_parent_details")
     load_table(dim_academic_factors, "dim_academic_factors")
 
-    # Build facts
+    # Building facts first here
     fact_performance = build_fact_student_performance(clean_df)
     fact_lifestyle = build_fact_student_lifestyle(clean_df)
 
