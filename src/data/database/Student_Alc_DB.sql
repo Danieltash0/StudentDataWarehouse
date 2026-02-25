@@ -1,9 +1,7 @@
 CREATE DATABASE stud_constellation_dw;
 USE stud_constellation_dw;
 
--- =========================
 -- DIMENSIONS
--- =========================
 
 CREATE TABLE dim_student (
     student_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -37,9 +35,7 @@ CREATE TABLE dim_academic_factors (
     paid BOOLEAN
 );
 
--- =========================
 -- FACT TABLES
--- =========================
 
 CREATE TABLE fact_student_performance (
     performance_id INT AUTO_INCREMENT PRIMARY KEY,
