@@ -1,6 +1,8 @@
 import pandas as pd
 from sqlalchemy import create_engine
 from etl_pipeline.db_config import DB_CONFIG
+from sqlalchemy import inspect
+from sqlalchemy import text
 
 MYSQL_URL = (
     f"mysql+pymysql://{DB_CONFIG['user']}:{DB_CONFIG['password']}"
@@ -11,12 +13,33 @@ engine = create_engine(MYSQL_URL, echo=False, pool_pre_ping=True)
 
 
 def load_table(df, table_name):
+
+    # Handle dimension tables safely
+    if table_name.startswith("dim_"):
+
+        # Get existing values
+        existing = pd.read_sql(f"SELECT * FROM {table_name}", engine)
+
+        if not existing.empty:
+         existing = existing.iloc[:, 1:]  # Drop ID column
+        
+        df = df[existing.columns]  # Ensure same column order
+
+        df = df.merge(existing.drop_duplicates(),
+                      on=list(existing.columns),
+                      how="left",
+                      indicator=True)
+
+        df = df[df["_merge"] == "left_only"]
+        df = df.drop(columns=["_merge"])
+
     if df.empty:
+        print(f"No new rows to insert into {table_name}")
         return
 
     df.to_sql(
         table_name,
-        con=engine,
+        engine,
         if_exists="append",
         index=False,
         method="multi"

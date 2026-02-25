@@ -1,9 +1,12 @@
 CREATE DATABASE stud_constellation_dw;
 USE stud_constellation_dw;
 
+-- =========================
+-- DIMENSIONS
+-- =========================
 
 CREATE TABLE dim_student (
-    student_ID INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT AUTO_INCREMENT PRIMARY KEY,
     school VARCHAR(2) NOT NULL,
     sex CHAR(1) NOT NULL,
     age TINYINT NOT NULL,
@@ -14,74 +17,79 @@ CREATE TABLE dim_student (
 );
 
 CREATE TABLE dim_subject (
-    subject_ID INT AUTO_INCREMENT PRIMARY KEY,
-    subject_name VARCHAR(20) NOT NULL
+    subject_id INT AUTO_INCREMENT PRIMARY KEY,
+    subject_name VARCHAR(20) NOT NULL UNIQUE
 );
 
 CREATE TABLE dim_parent_details (
-    parent_details_ID INT AUTO_INCREMENT PRIMARY KEY,
-    Medu TINYINT,
-    Fedu TINYINT,
-    Mjob VARCHAR(20),
-    Fjob VARCHAR(20)
+    parent_details_id INT AUTO_INCREMENT PRIMARY KEY,
+    mother_education_level TINYINT,
+    father_education_level TINYINT,
+    mother_job_title VARCHAR(20),
+    father_job_title VARCHAR(20)
 );
 
 CREATE TABLE dim_academic_factors (
-    academic_factors_ID INT AUTO_INCREMENT PRIMARY KEY,
+    academic_factors_id INT AUTO_INCREMENT PRIMARY KEY,
     reason VARCHAR(20),
     schoolsup BOOLEAN,
     famsup BOOLEAN,
     paid BOOLEAN
 );
 
+-- =========================
+-- FACT TABLES
+-- =========================
+
 CREATE TABLE fact_student_performance (
-    performance_ID INT AUTO_INCREMENT PRIMARY KEY,
+    performance_id INT AUTO_INCREMENT PRIMARY KEY,
 
-    student_ID INT NOT NULL,
-    subject_ID INT NOT NULL,
-    parent_details_ID INT,
-    academic_factors_ID INT,
+    student_id INT NOT NULL,
+    subject_id INT NOT NULL,
+    parent_details_id INT,
+    academic_factors_id INT,
 
-    G1 TINYINT,
-    G2 TINYINT,
-    G3 TINYINT,
+    first_period_grade TINYINT,
+    second_period_grade TINYINT,
+    final_grade TINYINT,
 
-    failures TINYINT,
-    absences INT,
+    prior_class_failures TINYINT,
+    total_absences INT,
 
-    FOREIGN KEY (student_ID)
-        REFERENCES dim_student(student_ID),
+    FOREIGN KEY (student_id)
+        REFERENCES dim_student(student_id),
 
-    FOREIGN KEY (subject_ID)
-        REFERENCES dim_subject(subject_ID),
+    FOREIGN KEY (subject_id)
+        REFERENCES dim_subject(subject_id),
 
-    FOREIGN KEY (parent_details_ID)
-        REFERENCES dim_parent_details(parent_details_ID),
+    FOREIGN KEY (parent_details_id)
+        REFERENCES dim_parent_details(parent_details_id),
 
-    FOREIGN KEY (academic_factors_ID)
-        REFERENCES dim_academic_factors(academic_factors_ID)
+    FOREIGN KEY (academic_factors_id)
+        REFERENCES dim_academic_factors(academic_factors_id)
 );
 
 CREATE TABLE fact_student_lifestyle (
-    lifestyle_ID INT AUTO_INCREMENT PRIMARY KEY,
+    lifestyle_id INT AUTO_INCREMENT PRIMARY KEY,
 
-    student_ID INT NOT NULL,
+    student_id INT NOT NULL,
 
-    traveltime TINYINT,
-    studytime TINYINT,
+    commute_time_category TINYINT,
+    weekly_study_time_category TINYINT,
+
     activities BOOLEAN,
     nursery BOOLEAN,
     higher BOOLEAN,
     internet BOOLEAN,
     romantic BOOLEAN,
 
-    famrel TINYINT,
-    freetime TINYINT,
-    goout TINYINT,
-    Dalc TINYINT,
-    Walc TINYINT,
-    health TINYINT,
+    family_relationship_score TINYINT,
+    free_time_index TINYINT,
+    social_activity_index TINYINT,
+    weekday_alcohol_consumption_level TINYINT,
+    weekend_alcohol_consumption_level TINYINT,
+    health_status_score TINYINT,
 
-    FOREIGN KEY (student_ID)
-        REFERENCES dim_student(student_ID)
+    FOREIGN KEY (student_id)
+        REFERENCES dim_student(student_id)
 );

@@ -16,7 +16,7 @@ from etl_pipeline.loader import (
 
 def run_pipeline():
     print("Starting ETL pipeline...")
-
+ 
     raw_df = extract_raw_data()
     clean_df = transform_data(raw_df)
 
@@ -25,6 +25,12 @@ def run_pipeline():
     dim_subject = build_dim_subject(clean_df)
     dim_parent_details = build_dim_parent_details(clean_df)
     dim_academic_factors = build_dim_academic_factors(clean_df)
+     
+
+    print("dim_student columns:", dim_student.columns.tolist())
+    print(dim_subject)
+    print("Rows:", len(dim_subject))
+
 
     # Load dimensions
     load_table(dim_student, "dim_student")

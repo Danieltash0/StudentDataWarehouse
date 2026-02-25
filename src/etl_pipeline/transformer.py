@@ -45,14 +45,33 @@ def transform_data(raw_df):
 # Dimensions
 def build_dim_student(df):
     cols = [
-        "school","sex","age","address",
-        "famsize","pstatus","guardian"
+        "school", "sex", "age", "address",
+        "famsize", "pstatus", "guardian"
     ]
-    return df[cols].drop_duplicates().reset_index(drop=True)
+
+    missing = [c for c in cols if c not in df.columns]
+    if missing:
+        raise ValueError(f"Missing columns in dim_student: {missing}")
+
+    dim = df[cols].drop_duplicates().reset_index(drop=True)
+
+    # Ensure correct order exactly matching MySQL table
+    dim = dim[
+        ["school", "sex", "age", "address",
+         "famsize", "pstatus", "guardian"]
+    ]
+
+    return dim
 
 
 def build_dim_subject(df):
-    return df[["subject_name"]].drop_duplicates().reset_index(drop=True)
+    return (
+        df[["subject_name"]]
+        .dropna()
+        .drop_duplicates()
+        .reset_index(drop=True)
+    )
+
 
 
 def build_dim_parent_details(df):
