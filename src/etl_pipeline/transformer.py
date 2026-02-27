@@ -20,7 +20,7 @@ def transform_data(raw_df):
                 .fillna(False)
             )
 
-    # Enterprise naming conventions
+    
     RENAME_MAP = {
         # Grades
         "g1": "first_period_grade",

@@ -8,7 +8,7 @@ CREATE TABLE dim_student (
     school VARCHAR(2) NOT NULL,
     sex CHAR(1) NOT NULL,
     age TINYINT NOT NULL,
-    address CHAR(1),
+    address VARCHAR(10),
     famsize VARCHAR(3),
     pstatus CHAR(1),
     guardian VARCHAR(10)

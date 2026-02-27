@@ -50,7 +50,7 @@ def load_table(df, table_name):
         method="multi"
     )
 
-    print(f"Inserted {len(df)} rows into {table_name}")
+    #print(f"Inserted {len(df)} rows into {table_name}")
 
 
 # Helper to fetch the dim tables
