@@ -9,8 +9,8 @@ const ConsumptionFilter = ({ consumptionType, setConsumptionType }) => {
         value={consumptionType} 
         onChange={(e) => setConsumptionType(e.target.value)}
       >
-        <option value="weekend">Weekend Alcohol Consumption</option>
-        <option value="weekday">Weekday Alcohol Consumption</option>
+        <option value="weekend_alcohol_consumption_level">Weekend Alcohol Consumption</option>
+        <option value="weekday_alcohol_consumption_level">Weekday Alcohol Consumption</option>
       </select>
     </div>
   );

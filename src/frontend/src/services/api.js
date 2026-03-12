@@ -14,16 +14,16 @@ export const getGenderDistribution = (school = null, subject = null) => {
   return api.get('/gender-distribution', { params });
 };
 
-export const getPerformanceGrades = (school = null, subject = null) => {
+export const getAverageGrades = (school = null, subject = null) => {
   const params = {};
   if (school) params.school = school;
   if (subject) params.subject = subject;
-  return api.get('/performance-grades', { params });
+  return api.get('/average-grades', { params });
 };
 
-export const getAlcoholPerformance = (consumptionType = 'weekend') => {
-  return api.get('/alcohol-performance', { 
-    params: { consumption_type: consumptionType } 
+export const getAlcoholVsPerformance = (consumptionLevelType = 'weekend_alcohol_consumption_level') => {
+  return api.get('/alcohol-vs-performance', { 
+    params: { consumption_level_type: consumptionLevelType } 
   });
 };
 

@@ -7,8 +7,8 @@ import SubjectFilter from '../components/SubjectFilter';
 import ConsumptionFilter from '../components/ConsumptionFilter';
 import { 
   getGenderDistribution, 
-  getPerformanceGrades,
-  getAlcoholPerformance,
+  getAverageGrades,
+  getAlcoholVsPerformance,
   healthCheck
 } from '../services/api';
 
@@ -28,7 +28,7 @@ const Dashboard = () => {
   // Alcohol chart state
   const [alcoholData, setAlcoholData] = useState([]);
   const [alcoholLoading, setAlcoholLoading] = useState(true);
-  const [consumptionType, setConsumptionType] = useState('weekend');
+  const [consumptionLevelType, setConsumptionLevelType] = useState('weekend_alcohol_consumption_level');
 
   // Global state
   const [error, setError] = useState(null);
@@ -46,7 +46,7 @@ const Dashboard = () => {
   // Fetch alcohol performance data
   useEffect(() => {
     fetchAlcoholData();
-  }, [consumptionType]);
+  }, [consumptionLevelType]);
 
   const fetchGenderData = async () => {
     try {
@@ -65,7 +65,7 @@ const Dashboard = () => {
   const fetchPerformanceData = async () => {
     try {
       setPerformanceLoading(true);
-      const response = await getPerformanceGrades(performanceSchool, performanceSubject);
+      const response = await getAverageGrades(performanceSchool, performanceSubject);
       setPerformanceData(response.data);
       setError(null);
     } catch (err) {
@@ -79,7 +79,7 @@ const Dashboard = () => {
   const fetchAlcoholData = async () => {
     try {
       setAlcoholLoading(true);
-      const response = await getAlcoholPerformance(consumptionType);
+      const response = await getAlcoholVsPerformance(consumptionLevelType);
       setAlcoholData(response.data);
       setError(null);
     } catch (err) {
@@ -128,8 +128,8 @@ const Dashboard = () => {
         <h2>Alcohol Consumption vs Academic Performance</h2>
         <div className="filters-row">
           <ConsumptionFilter 
-            consumptionType={consumptionType} 
-            setConsumptionType={setConsumptionType} 
+            consumptionType={consumptionLevelType} 
+            setConsumptionType={setConsumptionLevelType} 
           />
         </div>
         <AlcoholPerformanceChart data={alcoholData} loading={alcoholLoading} />

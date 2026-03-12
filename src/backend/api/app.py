@@ -13,10 +13,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Database connection
-MYSQL_URL = (
-    f"mysql+pymysql://{DB_CONFIG['user']}:{DB_CONFIG['password']}"
-    f"@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
-)
+MYSQL_URL = f"mysql+pymysql://{DB_CONFIG['user']}:{DB_CONFIG['password']}@{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['database']}"
 engine = create_engine(MYSQL_URL, echo=False, pool_pre_ping=True)
 
 @app.route('/api/gender-distribution', methods=['GET'])
@@ -28,7 +25,9 @@ def gender_distribution():
         query = """
         SELECT
         d.sex AS gender,
-        COUNT(*) AS total_students
+        COUNT(*) AS total_students,
+        d.school,
+        s.subject_name AS subject
         FROM dim_student d
         JOIN fact_student_performance f
         ON d.student_id = f.student_id
@@ -45,24 +44,26 @@ def gender_distribution():
             query += " AND s.subject_name = %s"
             params.append(subject)
             
-        query += " GROUP BY d.sex"
+        query += " GROUP BY d.sex, d.school, s.subject_name"
         
         df = pd.read_sql(query, engine, params=params)
         return jsonify(df.to_dict('records'))
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/performance-grades', methods=['GET'])
-def performance_grades():
+@app.route('/api/average-grades', methods=['GET'])
+def average_grades():
     try:
         school = request.args.get('school')
         subject = request.args.get('subject')
         
         query = """
         SELECT
-        AVG(f.first_period_grade) AS avg_first_grade,
-        AVG(f.second_period_grade) AS avg_second_grade,
-        AVG(f.final_grade) AS avg_final_grade
+        AVG(f.first_period_grade) AS avg_first_period_grade,
+        AVG(f.second_period_grade) AS avg_second_period_grade,
+        AVG(f.final_grade) AS avg_final_grade,
+        d.school,
+        s.subject_name AS subject
         FROM fact_student_performance f
         JOIN dim_student d
         ON f.student_id = d.student_id
@@ -79,12 +80,14 @@ def performance_grades():
             query += " AND s.subject_name = %s"
             params.append(subject)
             
+        query += " GROUP BY d.school, s.subject_name"
+        
         df = pd.read_sql(query, engine, params=params)
         
         # Transform data for Recharts format
         result = [
-            {'name': 'First Period', 'grade': float(df['avg_first_grade'].iloc[0]) if not df.empty else 0},
-            {'name': 'Second Period', 'grade': float(df['avg_second_grade'].iloc[0]) if not df.empty else 0},
+            {'name': 'First Period', 'grade': float(df['avg_first_period_grade'].iloc[0]) if not df.empty else 0},
+            {'name': 'Second Period', 'grade': float(df['avg_second_period_grade'].iloc[0]) if not df.empty else 0},
             {'name': 'Final Grade', 'grade': float(df['avg_final_grade'].iloc[0]) if not df.empty else 0}
         ]
         
@@ -92,47 +95,26 @@ def performance_grades():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/absences-by-address', methods=['GET'])
-def absences_by_address():
+@app.route('/api/alcohol-vs-performance', methods=['GET'])
+def alcohol_vs_performance():
     try:
-        query = """
-        SELECT d.address, AVG(f.total_absences) AS avg_absences
-        FROM fact_student_performance f
-        JOIN dim_student d ON f.student_id = d.student_id
-        GROUP BY d.address
-        """
-        df = pd.read_sql(query, engine)
-        return jsonify(df.to_dict('records'))
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/alcohol-performance', methods=['GET'])
-def alcohol_performance():
-    try:
-        consumption_type = request.args.get('consumption_type', 'weekend')
+        consumption_level_type = request.args.get('consumption_level_type', 'weekend_alcohol_consumption_level')
         
-        if consumption_type == 'weekday':
-            query = """
-            SELECT
-            l.weekday_alcohol_consumption_level AS consumption_level,
-            AVG(p.final_grade) AS avg_final_grade
-            FROM fact_student_performance p
-            JOIN fact_student_lifestyle l
-            ON p.student_id = l.student_id
-            GROUP BY l.weekday_alcohol_consumption_level
-            ORDER BY l.weekday_alcohol_consumption_level
-            """
-        else:  # default to weekend
-            query = """
-            SELECT
-            l.weekend_alcohol_consumption_level AS consumption_level,
-            AVG(p.final_grade) AS avg_final_grade
-            FROM fact_student_performance p
-            JOIN fact_student_lifestyle l
-            ON p.student_id = l.student_id
-            GROUP BY l.weekend_alcohol_consumption_level
-            ORDER BY l.weekend_alcohol_consumption_level
-            """
+        # Validate consumption level type
+        valid_types = ['weekday_alcohol_consumption_level', 'weekend_alcohol_consumption_level']
+        if consumption_level_type not in valid_types:
+            consumption_level_type = 'weekend_alcohol_consumption_level'
+        
+        query = """
+        SELECT
+        l.{consumption_type} AS consumption_level,
+        AVG(p.final_grade) AS avg_final_grade
+        FROM fact_student_performance p
+        JOIN fact_student_lifestyle l
+        ON p.student_id = l.student_id
+        GROUP BY l.{consumption_type}
+        ORDER BY l.{consumption_type}
+        """.format(consumption_type=consumption_level_type)
         
         df = pd.read_sql(query, engine)
         return jsonify(df.to_dict('records'))

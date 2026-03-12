@@ -5,17 +5,15 @@ BASE_DIR = Path(__file__).parent.parent
 DATA_DIR = BASE_DIR / "data" / "raw"
 
 def extract_raw_data():
-    mat_path = DATA_DIR / "student-mat.csv"
-    por_path = DATA_DIR / "student-por.csv"
-
-    mat_df = pd.read_csv(mat_path)
-    por_df = pd.read_csv(por_path)
-
-    mat_df["subject_name"] = "Math"
-    por_df["subject_name"] = "Portuguese"
-
-    raw_df = pd.concat([mat_df, por_df], ignore_index=True)
-
-    print("Extracted columns:", raw_df.columns.tolist())
-
+    """
+    Extract data from the merged dataset (studentcombined.csv)
+    This dataset contains 382 students with .x and .y columns for Math and Portuguese subjects
+    """
+    combined_path = DATA_DIR / "studentcombined.csv"
+    
+    raw_df = pd.read_csv(combined_path, sep=';')
+    
+    print(f"Extracted {len(raw_df)} rows from merged dataset")
+    print("Sample columns:", raw_df.columns.tolist()[:10])  # Show first 10 columns
+    
     return raw_df
