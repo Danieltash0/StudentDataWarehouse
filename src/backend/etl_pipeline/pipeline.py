@@ -43,10 +43,21 @@ def run_pipeline():
         print(f"Built dim_parent_details: {len(dim_parent_details)} rows")
         print(f"Built dim_academic_support: {len(dim_academic_support)} rows")
         
-        # Step 3: Build facts
-        print("\n4. BUILDING FACTS...")
-        fact_performance = build_fact_student_performance(clean_df)
-        fact_lifestyle = build_fact_student_lifestyle(clean_df)
+        # Check if fallback was used (minimal student dimension)
+        if len(dim_student) < len(clean_df) * 0.5:
+            print("WARNING: Using fallback student dimension due to data quality issues")
+            print("Only loading performance and lifestyle facts for valid students")
+            
+            # Build facts only for valid students
+            valid_student_indices = dim_student['student_id'].tolist()
+            valid_clean_df = clean_df[clean_df['student_id'].isin(valid_student_indices)]
+            
+            fact_performance = build_fact_student_performance(valid_clean_df)
+            fact_lifestyle = build_fact_student_lifestyle(valid_clean_df)
+        else:
+            # Normal flow - build facts for all students
+            fact_performance = build_fact_student_performance(clean_df)
+            fact_lifestyle = build_fact_student_lifestyle(clean_df)
         
         print(f"Built fact_student_performance: {len(fact_performance)} rows")
         print(f"Built fact_student_lifestyle: {len(fact_lifestyle)} rows")

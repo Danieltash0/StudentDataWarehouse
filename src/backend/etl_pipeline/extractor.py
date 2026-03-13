@@ -27,38 +27,34 @@ def extract_raw_data():
     """
     combined_path = DATA_DIR / "studentcombined.csv"
     
-    # Try reading with proper quote handling first
+    # The CSV has quoted column names but unquoted data rows
+    # We need to handle this properly
     try:
-        raw_df = pd.read_csv(combined_path, sep=';', quotechar='"')
-        print(f"Extracted {len(raw_df)} rows using semicolon separator")
-    except Exception as e:
-        print(f"Semicolon separator failed: {e}")
-        # Fallback to comma
-        try:
-            raw_df = pd.read_csv(combined_path, sep=',', quotechar='"')
-            print(f"Extracted {len(raw_df)} rows using comma separator")
-        except Exception as e2:
-            print(f"Comma separator failed: {e2}")
-            # Last resort - try without quotes
-            raw_df = pd.read_csv(combined_path, sep=';')
-            print(f"Extracted {len(raw_df)} rows without quote handling")
-    
-    # Check if we still have only one column (all quoted together)
-    if len(raw_df.columns) == 1:
-        print("Warning: Still detecting single column, attempting manual parsing...")
-        # Read the first line to extract column names
+        # Read first line to get quoted column names
         with open(combined_path, 'r', encoding='utf-8') as f:
             first_line = f.readline().strip()
         
-        # Remove quotes and split by semicolon
+        # Extract column names from quotes
         if first_line.startswith('"') and first_line.endswith('"'):
             column_names = first_line[1:-1].split('","')
-            print(f"Manually extracted {len(column_names)} columns")
+            print(f"Manually extracted {len(column_names)} columns: {column_names[:5]}...")
             
-            # Re-read with proper column names
-            raw_df = pd.read_csv(combined_path, sep=';', quotechar='"', names=column_names, skiprows=1)
+            # Read the rest of the file with proper column names
+            raw_df = pd.read_csv(combined_path, sep=',', quotechar='"', names=column_names, skiprows=1, dtype=str)
+        else:
+            # Fallback to normal reading
+            raw_df = pd.read_csv(combined_path, sep=',', quotechar='"', dtype=str)
+        
+        print(f"Extracted {len(raw_df)} rows from CSV")
+    except Exception as e:
+        print(f"CSV extraction failed: {e}")
+        # Last resort
+        raw_df = pd.read_csv(combined_path, sep=',', dtype=str)
+        print(f"Fallback extracted {len(raw_df)} rows")
     
     print(f"Final column count: {len(raw_df.columns)}")
     print("Sample columns:", raw_df.columns.tolist()[:10])
+    print("Sample data types:", raw_df.dtypes.to_dict())
+    print("Sample row 0:", raw_df.iloc[0].to_dict() if len(raw_df) > 0 else "No data")
     
     return raw_df

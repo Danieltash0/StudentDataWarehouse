@@ -7,6 +7,25 @@ const api = axios.create({
   timeout: 10000,
 });
 
+// Add response interceptor for better error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('API Error:', error);
+    if (error.response) {
+      // Server responded with error status
+      console.error('Error Response:', error.response.data);
+    } else if (error.request) {
+      // Request was made but no response received
+      console.error('No Response:', error.request);
+    } else {
+      // Something else happened
+      console.error('Error:', error.message);
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const getGenderDistribution = (school = null, subject = null) => {
   const params = {};
   if (school) params.school = school;

@@ -33,6 +33,13 @@ const Dashboard = () => {
   // Global state
   const [error, setError] = useState(null);
 
+  // Refresh all data
+  const refreshAllData = () => {
+    fetchGenderData();
+    fetchPerformanceData();
+    fetchAlcoholData();
+  };
+
   // Fetch gender distribution data
   useEffect(() => {
     fetchGenderData();
@@ -52,11 +59,20 @@ const Dashboard = () => {
     try {
       setGenderLoading(true);
       const response = await getGenderDistribution(genderSchool, genderSubject);
-      setGenderData(response.data);
+      
+      // Validate response data
+      if (!response.data || !Array.isArray(response.data)) {
+        console.warn('Invalid gender data received:', response.data);
+        setGenderData([]);
+      } else {
+        setGenderData(response.data);
+      }
+      
       setError(null);
     } catch (err) {
       setError('Failed to fetch gender distribution data');
       console.error('Gender API Error:', err);
+      setGenderData([]);
     } finally {
       setGenderLoading(false);
     }
@@ -66,11 +82,20 @@ const Dashboard = () => {
     try {
       setPerformanceLoading(true);
       const response = await getAverageGrades(performanceSchool, performanceSubject);
-      setPerformanceData(response.data);
+      
+      // Validate response data
+      if (!response.data || !Array.isArray(response.data)) {
+        console.warn('Invalid performance data received:', response.data);
+        setPerformanceData([]);
+      } else {
+        setPerformanceData(response.data);
+      }
+      
       setError(null);
     } catch (err) {
       setError('Failed to fetch performance data');
       console.error('Performance API Error:', err);
+      setPerformanceData([]);
     } finally {
       setPerformanceLoading(false);
     }
@@ -80,11 +105,20 @@ const Dashboard = () => {
     try {
       setAlcoholLoading(true);
       const response = await getAlcoholVsPerformance(consumptionLevelType);
-      setAlcoholData(response.data);
+      
+      // Validate response data
+      if (!response.data || !Array.isArray(response.data)) {
+        console.warn('Invalid alcohol data received:', response.data);
+        setAlcoholData([]);
+      } else {
+        setAlcoholData(response.data);
+      }
+      
       setError(null);
     } catch (err) {
       setError('Failed to fetch alcohol performance data');
       console.error('Alcohol API Error:', err);
+      setAlcoholData([]);
     } finally {
       setAlcoholLoading(false);
     }
@@ -101,7 +135,12 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard">
-      <h1>Student Analytics Dashboard</h1>
+      <div className="dashboard-header">
+        <h1>Student Analytics Dashboard</h1>
+        <button onClick={refreshAllData} className="refresh-button">
+          Refresh Data
+        </button>
+      </div>
       
       {/* Gender Distribution Section */}
       <div className="chart-section">

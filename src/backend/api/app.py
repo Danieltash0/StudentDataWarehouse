@@ -44,11 +44,16 @@ def gender_distribution():
             query += " AND s.subject_name = %s"
             params.append(subject)
             
-        query += " GROUP BY d.sex, d.school, s.subject_name"
+        query += " GROUP BY d.sex, d.school, s.subject_name ORDER BY d.sex"
         
         df = pd.read_sql(query, engine, params=params)
-        return jsonify(df.to_dict('records'))
+        
+        # Transform data for better frontend compatibility
+        result = df.to_dict('records')
+        
+        return jsonify(result)
     except Exception as e:
+        print(f"Error in gender_distribution: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/average-grades', methods=['GET'])
@@ -85,14 +90,27 @@ def average_grades():
         df = pd.read_sql(query, engine, params=params)
         
         # Transform data for Recharts format
-        result = [
-            {'name': 'First Period', 'grade': float(df['avg_first_period_grade'].iloc[0]) if not df.empty else 0},
-            {'name': 'Second Period', 'grade': float(df['avg_second_period_grade'].iloc[0]) if not df.empty else 0},
-            {'name': 'Final Grade', 'grade': float(df['avg_final_grade'].iloc[0]) if not df.empty else 0}
-        ]
+        if df.empty:
+            result = [
+                {'name': 'First Period', 'grade': 0},
+                {'name': 'Second Period', 'grade': 0},
+                {'name': 'Final Grade', 'grade': 0}
+            ]
+        else:
+            # If multiple rows (different schools/subjects), take the average across all
+            avg_first = df['avg_first_period_grade'].mean()
+            avg_second = df['avg_second_period_grade'].mean() 
+            avg_final = df['avg_final_grade'].mean()
+            
+            result = [
+                {'name': 'First Period', 'grade': float(avg_first)},
+                {'name': 'Second Period', 'grade': float(avg_second)},
+                {'name': 'Final Grade', 'grade': float(avg_final)}
+            ]
         
         return jsonify(result)
     except Exception as e:
+        print(f"Error in average_grades: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/alcohol-vs-performance', methods=['GET'])
@@ -112,13 +130,23 @@ def alcohol_vs_performance():
         FROM fact_student_performance p
         JOIN fact_student_lifestyle l
         ON p.student_id = l.student_id
+        WHERE l.{consumption_type} IS NOT NULL
         GROUP BY l.{consumption_type}
         ORDER BY l.{consumption_type}
         """.format(consumption_type=consumption_level_type)
         
         df = pd.read_sql(query, engine)
-        return jsonify(df.to_dict('records'))
+        
+        # Transform data for better frontend compatibility
+        result = df.to_dict('records')
+        
+        # Ensure consumption levels are properly formatted
+        for item in result:
+            item['avg_final_grade'] = float(item['avg_final_grade'])
+        
+        return jsonify(result)
     except Exception as e:
+        print(f"Error in alcohol_vs_performance: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/health', methods=['GET'])
