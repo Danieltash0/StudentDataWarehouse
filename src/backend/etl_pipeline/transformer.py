@@ -117,8 +117,8 @@ def build_dim_parent_details(df):
         return None
 
     parent_df = pd.DataFrame({
-        'mother_education_level': df[find_col('medu')].astype(str),
-        'father_education_level': df[find_col('fedu')].astype(str),
+        'mother_education_level': pd.to_numeric(df[find_col('medu')], errors='coerce').fillna(0).astype(int),
+        'father_education_level': pd.to_numeric(df[find_col('fedu')], errors='coerce').fillna(0).astype(int),
         'mother_job_title': df[find_col('mjob')].astype(str),
         'father_job_title': df[find_col('fjob')].astype(str),
     })
@@ -135,9 +135,9 @@ def build_dim_academic_support(df):
 
     academic_df = pd.DataFrame({
         'school_choice_reason': df[find_col('reason')].astype(str),
-        'school_support': df[find_col('schoolsup.x')].astype(str),
-        'family_support': df[find_col('famsup.x')].astype(str),
-        'extra_paid_classes': df[find_col('paid.x')].astype(str),
+        'school_support': df[find_col('schoolsup.x')].astype(int),
+        'family_support': df[find_col('famsup.x')].astype(int),
+        'extra_paid_classes': df[find_col('paid.x')].astype(int),
     })
 
     return academic_df.drop_duplicates().reset_index(drop=True)
@@ -195,14 +195,14 @@ def build_fact_student_performance(df):
         # Shared parent/academic lookup values with null handling
         shared = {
             "student_id": idx + 1,   # Direct surrogate — matches dim_student.student_id
-            "mother_education_level": row[col['medu']] if not pd.isna(row[col['medu']]) else 'Unknown',
-            "father_education_level": row[col['fedu']] if not pd.isna(row[col['fedu']]) else 'Unknown',
+            "mother_education_level": int(row[col['medu']]) if not pd.isna(row[col['medu']]) else 0,
+            "father_education_level": int(row[col['fedu']]) if not pd.isna(row[col['fedu']]) else 0,
             "mother_job_title": row[col['mjob']] if not pd.isna(row[col['mjob']]) else 'Unknown',
             "father_job_title": row[col['fjob']] if not pd.isna(row[col['fjob']]) else 'Unknown',
             "school_choice_reason": row[col['reason']] if not pd.isna(row[col['reason']]) else 'Unknown',
-            "school_support": row[col['schoolsup']] if not pd.isna(row[col['schoolsup']]) else False,
-            "family_support": row[col['famsup']] if not pd.isna(row[col['famsup']]) else False,
-            "extra_paid_classes": row[col['paid']] if not pd.isna(row[col['paid']]) else False,
+            "school_support": int(row[col['schoolsup']]) if not pd.isna(row[col['schoolsup']]) else 0,
+            "family_support": int(row[col['famsup']]) if not pd.isna(row[col['famsup']]) else 0,
+            "extra_paid_classes": int(row[col['paid']]) if not pd.isna(row[col['paid']]) else 0,
         }
 
         # Math record (.x columns) - handle null grades with defaults

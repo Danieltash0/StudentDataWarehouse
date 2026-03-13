@@ -1,7 +1,8 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import pandas as pd
+from sqlalchemy import text
 from sqlalchemy import create_engine
+import pandas as pd
 import sys
 import os
 
@@ -22,29 +23,67 @@ def gender_distribution():
         school = request.args.get('school')
         subject = request.args.get('subject')
         
-        query = """
-        SELECT
-        d.sex AS gender,
-        COUNT(*) AS total_students,
-        d.school,
-        s.subject_name AS subject
-        FROM dim_student d
-        JOIN fact_student_performance f
-        ON d.student_id = f.student_id
-        JOIN dim_subject s
-        ON f.subject_id = s.subject_id
-        WHERE 1=1
-        """
-        
-        params = []
-        if school:
-            query += " AND d.school = %s"
-            params.append(school)
-        if subject:
-            query += " AND s.subject_name = %s"
-            params.append(subject)
-            
-        query += " GROUP BY d.sex, d.school, s.subject_name ORDER BY d.sex"
+        # Build query with proper parameter placeholders
+        if school and subject:
+            query = """
+                SELECT
+                d.sex AS gender,
+                COUNT(*) AS total_students,
+                d.school,
+                s.subject_name AS subject
+                FROM dim_student d
+                JOIN fact_student_performance f
+                ON d.student_id = f.student_id
+                JOIN dim_subject s
+                ON f.subject_id = s.subject_id
+                WHERE 1=1 AND d.school = %s AND s.subject_name = %s
+                GROUP BY d.sex, d.school, s.subject_name
+                ORDER BY d.sex
+                """
+            params = [school, subject]
+        elif school:
+            query = """
+                SELECT
+                d.sex AS gender,
+                COUNT(*) AS total_students,
+                d.school
+                FROM dim_student d
+                JOIN fact_student_performance f
+                ON d.student_id = f.student_id
+                WHERE 1=1 AND d.school = %s
+                GROUP BY d.sex, d.school
+                ORDER BY d.sex
+                """
+            params = [school]
+        elif subject:
+            query = """
+                SELECT
+                d.sex AS gender,
+                COUNT(*) AS total_students,
+                s.subject_name AS subject
+                FROM dim_student d
+                JOIN fact_student_performance f
+                ON d.student_id = f.student_id
+                JOIN dim_subject s
+                ON f.subject_id = s.subject_id
+                WHERE 1=1 AND s.subject_name = %s
+                GROUP BY d.sex, s.subject_name
+                ORDER BY d.sex
+                """
+            params = [subject]
+        else:
+            query = """
+                SELECT
+                d.sex AS gender,
+                COUNT(*) AS total_students
+                FROM dim_student d
+                JOIN fact_student_performance f
+                ON d.student_id = f.student_id
+                WHERE 1=1
+                GROUP BY d.sex
+                ORDER BY d.sex
+                """
+            params = []
         
         df = pd.read_sql(query, engine, params=params)
         
@@ -78,13 +117,17 @@ def average_grades():
         """
         
         params = []
+        conditions = []
         if school:
-            query += " AND d.school = %s"
+            conditions.append("d.school = %s")
             params.append(school)
         if subject:
-            query += " AND s.subject_name = %s"
+            conditions.append("s.subject_name = %s")
             params.append(subject)
             
+        if conditions:
+            query += " AND " + " AND ".join(conditions)
+        
         query += " GROUP BY d.school, s.subject_name"
         
         df = pd.read_sql(query, engine, params=params)
@@ -123,17 +166,17 @@ def alcohol_vs_performance():
         if consumption_level_type not in valid_types:
             consumption_level_type = 'weekend_alcohol_consumption_level'
         
-        query = """
+        query = f"""
         SELECT
-        l.{consumption_type} AS consumption_level,
+        l.{consumption_level_type} AS consumption_level,
         AVG(p.final_grade) AS avg_final_grade
         FROM fact_student_performance p
         JOIN fact_student_lifestyle l
         ON p.student_id = l.student_id
-        WHERE l.{consumption_type} IS NOT NULL
-        GROUP BY l.{consumption_type}
-        ORDER BY l.{consumption_type}
-        """.format(consumption_type=consumption_level_type)
+        WHERE l.{consumption_level_type} IS NOT NULL
+        GROUP BY l.{consumption_level_type}
+        ORDER BY l.{consumption_level_type}
+        """
         
         df = pd.read_sql(query, engine)
         
