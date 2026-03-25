@@ -37,7 +37,7 @@ def extract_raw_data():
         # Extract column names from quotes
         if first_line.startswith('"') and first_line.endswith('"'):
             column_names = first_line[1:-1].split('","')
-            print(f"Manually extracted {len(column_names)} columns: {column_names[:5]}...")
+          #  print(f"Manually extracted {len(column_names)} columns: {column_names[:5]}...")
             
             # Read the rest of the file with proper column names
             raw_df = pd.read_csv(combined_path, sep=',', quotechar='"', names=column_names, skiprows=1, dtype=str)
@@ -52,9 +52,9 @@ def extract_raw_data():
         raw_df = pd.read_csv(combined_path, sep=',', dtype=str)
         print(f"Fallback extracted {len(raw_df)} rows")
     
-    print(f"Final column count: {len(raw_df.columns)}")
-    print("Sample columns:", raw_df.columns.tolist()[:10])
-    print("Sample data types:", raw_df.dtypes.to_dict())
-    print("Sample row 0:", raw_df.iloc[0].to_dict() if len(raw_df) > 0 else "No data")
+   # print(f"Final column count: {len(raw_df.columns)}")
+   # print("Sample columns:", raw_df.columns.tolist()[:10])
+   # print("Sample data types:", raw_df.dtypes.to_dict())
+    #print("Sample row 0:", raw_df.iloc[0].to_dict() if len(raw_df) > 0 else "No data")
     
     return raw_df
