@@ -1,0 +1,84 @@
+# ============================================================
+# Student Alcohol Consumption — Data Warehouse Stack
+# Services:  mysql  →  etl  →  api
+# Usage:     docker compose up --build
+# ============================================================
+
+services:
+
+  # ── 1. MySQL Data Warehouse ────────────────────────────────
+  mysql:
+    image: mysql:8.0
+    container_name: stud_dw_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-12345}
+      MYSQL_DATABASE: ${DB_NAME:-stud_constellation_dw}
+    ports:
+      - "3307:3306"
+    volumes:
+      # Init script runs automatically on first startup (empty data dir)
+      - ./data/database/Student_Alc_DB.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      # Named volume keeps data between restarts
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost",
+             "-u", "root", "-p${DB_PASSWORD:-12345}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - dw_net
+
+  # ── 2. ETL Pipeline (runs once, then exits) ─────────────────
+  etl:
+    build:
+      context: .
+      dockerfile: Dockerfile.etl
+    container_name: stud_dw_etl
+    restart: "no"          # run-once; Docker won't restart it after success
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql       # container-name resolution on the shared network
+      DB_PORT: ${DB_PORT:-3306}
+      DB_USER: ${DB_USER:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-12345}
+      DB_NAME: ${DB_NAME:-stud_constellation_dw}
+    volumes:
+      # Mount raw data so the CSV files are always available inside the container
+      - ./data/raw:/app/data/raw:ro
+    networks:
+      - dw_net
+
+  # ── 3. Flask REST API ──────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: stud_dw_api
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      etl:
+        condition: service_completed_successfully
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: mysql
+      DB_PORT: ${DB_PORT:-3306}
+      DB_USER: ${DB_USER:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-12345}
+      DB_NAME: ${DB_NAME:-stud_constellation_dw}
+    networks:
+      - dw_net
+
+volumes:
+  mysql_data:
+
+networks:
+  dw_net:
+    driver: bridge

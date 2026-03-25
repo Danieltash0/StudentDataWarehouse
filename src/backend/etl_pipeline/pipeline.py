@@ -1,3 +1,5 @@
+import time
+import sqlalchemy
 from .extractor import extract_raw_data
 from .transformer import (
     transform_data,
@@ -13,14 +15,35 @@ from .loader import (
     load_fact_student_performance,
     load_fact_student_lifestyle,
     clear_all_tables,
-    get_table_counts
+    get_table_counts,
+    engine
 )
+
+def wait_for_db(retries: int = 15, delay: int = 5) -> None:
+    """
+    Block until MySQL is accepting connections.
+    Even after the Docker healthcheck passes, the server may need a moment.
+    """
+    for attempt in range(1, retries + 1):
+        try:
+            with engine.connect():
+                print("  Database connection established.")
+                return
+        except Exception as exc:
+            print(f"  Waiting for database... (attempt {attempt}/{retries}) — {exc}")
+            time.sleep(delay)
+    raise RuntimeError("Could not connect to the database after multiple retries.")
+
 
 def run_pipeline():
     try:
         print("=" * 50)
         print("STARTING ETL PIPELINE")
         print("=" * 50)
+        
+        # ── 0. Wait for MySQL ──────────────────────────────
+        print("\n0. WAITING FOR DATABASE...")
+        wait_for_db()
         
         # Step 1: Extract and transform
         print("\n1. EXTRACTING DATA...")

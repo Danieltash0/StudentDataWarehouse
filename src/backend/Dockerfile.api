@@ -1,0 +1,28 @@
+# ============================================================
+# Flask REST API Image
+# Starts after MySQL is healthy and the ETL job completes.
+# ============================================================
+
+FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        gcc \
+        default-libmysqlclient-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install API dependencies
+COPY api/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy API source and the db_config it imports
+COPY api/        ./api/
+COPY etl_pipeline/db_config.py ./etl_pipeline/db_config.py
+# Needed so `from etl_pipeline.db_config import DB_CONFIG` resolves
+RUN touch etl_pipeline/__init__.py
+
+EXPOSE 5000
+
+# Run from /app so sys.path picks up both api/ and etl_pipeline/
+CMD ["python", "api/app.py"]

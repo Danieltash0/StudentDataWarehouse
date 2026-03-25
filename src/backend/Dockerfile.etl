@@ -1,0 +1,25 @@
+# ============================================================
+# ETL Pipeline Image
+# Runs pipeline.py once to populate the MySQL data warehouse.
+# ============================================================
+
+FROM python:3.11-slim
+
+# System deps: gcc needed for some pandas/numpy wheels on slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        gcc \
+        default-libmysqlclient-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy and install ETL-only Python dependencies first (layer cache)
+COPY requirements.etl.txt .
+RUN pip install --no-cache-dir -r requirements.etl.txt
+
+# Copy the full backend source (etl_pipeline package + data)
+COPY etl_pipeline/ ./etl_pipeline/
+COPY data/raw/      ./data/raw/
+
+# Run the pipeline as a module so relative imports resolve correctly
+CMD ["python", "-m", "etl_pipeline.pipeline"]

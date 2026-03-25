@@ -1,9 +1,9 @@
-CREATE DATABASE stud_constellation_dw;
+CREATE DATABASE IF NOT EXISTS stud_constellation_dw;
 USE stud_constellation_dw;
 
 -- DIMENSIONS
 
-CREATE TABLE dim_student (
+CREATE TABLE IF NOT EXISTS dim_student (
     student_id INT AUTO_INCREMENT PRIMARY KEY,
     school VARCHAR(2) NOT NULL,
     sex CHAR(1) NOT NULL,
@@ -14,12 +14,12 @@ CREATE TABLE dim_student (
     guardian VARCHAR(10)
 );
 
-CREATE TABLE dim_subject (
+CREATE TABLE IF NOT EXISTS dim_subject (
     subject_id INT AUTO_INCREMENT PRIMARY KEY,
     subject_name VARCHAR(20) NOT NULL UNIQUE
 );
 
-CREATE TABLE dim_parent_details (
+CREATE TABLE IF NOT EXISTS dim_parent_details (
     parent_details_id INT AUTO_INCREMENT PRIMARY KEY,
     mother_education_level TINYINT,
     father_education_level TINYINT,
@@ -27,7 +27,7 @@ CREATE TABLE dim_parent_details (
     father_job_title VARCHAR(20)
 );
 
-CREATE TABLE dim_academic_support (
+CREATE TABLE IF NOT EXISTS dim_academic_support (
     academic_support_id INT AUTO_INCREMENT PRIMARY KEY,
     school_support BOOLEAN,
     family_support BOOLEAN,
@@ -37,7 +37,7 @@ CREATE TABLE dim_academic_support (
 
 -- FACT TABLES
 
-CREATE TABLE fact_student_performance (
+CREATE TABLE IF NOT EXISTS fact_student_performance (
     performance_id INT AUTO_INCREMENT PRIMARY KEY,
 
     student_id INT NOT NULL,
@@ -67,7 +67,7 @@ CREATE TABLE fact_student_performance (
         REFERENCES dim_academic_support(academic_support_id)
 );
 
-CREATE TABLE fact_student_lifestyle (
+CREATE TABLE IF NOT EXISTS fact_student_lifestyle (
     lifestyle_id INT AUTO_INCREMENT PRIMARY KEY,
 
     student_id INT NOT NULL,
