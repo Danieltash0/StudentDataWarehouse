@@ -66,7 +66,7 @@ def gender_distribution():
 
         query += " GROUP BY d.sex, d.school, s.subject_name"
 
-        df = pd.read_sql(query, engine, params=params if params else None)
+        df = pd.read_sql(query, engine, params=tuple(params) if params else None)
         return jsonify(df.to_dict('records')), 200
 
     except Exception as e:
@@ -98,7 +98,7 @@ def average_grades():
             query += " AND s.subject_name = %s"
             params.append(subject)
 
-        df = pd.read_sql(query, engine, params=params if params else None)
+        df = pd.read_sql(query, engine, params=tuple(params) if params else None)
 
         if df.empty or df['avg_final_grade'].isnull().all():
             return jsonify([]), 200

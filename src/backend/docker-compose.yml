@@ -102,6 +102,21 @@ services:
     networks:
       - dw_net
 
+  # ── 5. Metabase ──────────────────────────────────────────────
+  metabase:
+    image: metabase/metabase:latest
+    container_name: stud_dw_metabase
+    restart: unless-stopped
+    ports:
+      - "32768:3000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      MB_DB_TYPE: h2        # Metabase's own internal config DB (default)
+    networks:
+      - dw_net              # same network as mysql — so host = "mysql"
+
 # ── Volumes & Networks ───────────────────────────────────────
 volumes:
   mysql_data:
