@@ -1,25 +1,30 @@
 # ============================================================
-# Student Alcohol Consumption — Data Warehouse Stack
-# Services:  mysql  →  etl  →  api
-# Usage:     docker compose up --build
+# Student Alcohol Consumption — Full Stack (4 containers)
+#
+# Services boot in this order:
+#   mysql  →  etl (exits after load)  →  api  →  frontend
+#
+# Usage:
+#   docker compose up --build
+#
+# Dashboard:  http://localhost:3000
+# API:        http://localhost:5000/api/health
 # ============================================================
 
 services:
 
-  # ── 1. MySQL Data Warehouse ────────────────────────────────
+  # ── 1. MySQL Data Warehouse ─────────────────────────────────
   mysql:
     image: mysql:8.0
     container_name: stud_dw_mysql
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-12345}
-      MYSQL_DATABASE: ${DB_NAME:-stud_constellation_dw}
+      MYSQL_DATABASE:      ${DB_NAME:-stud_constellation_dw}
     ports:
-      - "3307:3306"
+      - "3307:3306"          # 3307 avoids clash with any local MySQL
     volumes:
-      # Init script runs automatically on first startup (empty data dir)
       - ./data/database/Student_Alc_DB.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
-      # Named volume keeps data between restarts
       - mysql_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost",
@@ -31,29 +36,28 @@ services:
     networks:
       - dw_net
 
-  # ── 2. ETL Pipeline (runs once, then exits) ─────────────────
+  # ── 2. ETL Pipeline (run-once job) ──────────────────────────
   etl:
     build:
       context: .
       dockerfile: Dockerfile.etl
     container_name: stud_dw_etl
-    restart: "no"          # run-once; Docker won't restart it after success
+    restart: "no"
     depends_on:
       mysql:
         condition: service_healthy
     environment:
-      DB_HOST: mysql       # container-name resolution on the shared network
-      DB_PORT: ${DB_PORT:-3306}
-      DB_USER: ${DB_USER:-root}
+      DB_HOST:     mysql
+      DB_PORT:     ${DB_PORT:-3306}
+      DB_USER:     ${DB_USER:-root}
       DB_PASSWORD: ${DB_PASSWORD:-12345}
-      DB_NAME: ${DB_NAME:-stud_constellation_dw}
+      DB_NAME:     ${DB_NAME:-stud_constellation_dw}
     volumes:
-      # Mount raw data so the CSV files are always available inside the container
       - ./data/raw:/app/data/raw:ro
     networks:
       - dw_net
 
-  # ── 3. Flask REST API ──────────────────────────────────────
+  # ── 3. Flask REST API ────────────────────────────────────────
   api:
     build:
       context: .
@@ -68,14 +72,37 @@ services:
     ports:
       - "5000:5000"
     environment:
-      DB_HOST: mysql
-      DB_PORT: ${DB_PORT:-3306}
-      DB_USER: ${DB_USER:-root}
+      DB_HOST:     mysql
+      DB_PORT:     ${DB_PORT:-3306}
+      DB_USER:     ${DB_USER:-root}
       DB_PASSWORD: ${DB_PASSWORD:-12345}
-      DB_NAME: ${DB_NAME:-stud_constellation_dw}
+      DB_NAME:     ${DB_NAME:-stud_constellation_dw}
+    # healthcheck lets the frontend depend_on: api: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     networks:
       - dw_net
 
+  # ── 4. React Frontend (nginx) ────────────────────────────────
+  frontend:
+    build:
+      context: ../../src/frontend      # path relative to docker-compose.yml
+      dockerfile: Dockerfile.frontend
+    container_name: stud_dw_frontend
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "3000:80"
+    networks:
+      - dw_net
+
+# ── Volumes & Networks ───────────────────────────────────────
 volumes:
   mysql_data:
 

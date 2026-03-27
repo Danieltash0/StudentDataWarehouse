@@ -1,42 +1,43 @@
 import React from 'react';
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+  PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
+} from 'recharts';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 const GenderPieChart = ({ data, loading }) => {
-  if (loading) {
-    return <div className="chart-loading">Loading gender data...</div>;
-  }
+  if (loading) return <div className="chart-placeholder">Loading gender data...</div>;
+  if (!data || data.length === 0) return <div className="chart-placeholder">No data available</div>;
 
-  if (!data || data.length === 0) {
-    return <div className="chart-empty">No gender data available</div>;
-  }
+  // BUG FIX: The API can return multiple rows for the same gender when no
+  // school/subject filter is active (one row per school × subject combo).
+  // Aggregate total_students by gender before passing to Recharts.
+  const aggregated = data.reduce((acc, item) => {
+    const key = item.gender === 'M' ? 'Male' : item.gender === 'F' ? 'Female' : item.gender;
+    acc[key] = (acc[key] || 0) + Number(item.total_students);
+    return acc;
+  }, {});
 
-  const chartData = data.map(item => ({
-    name: item.gender === 'M' ? 'Male' : item.gender === 'F' ? 'Female' : item.gender,
-    value: item.total_students
-  }));
+  const chartData = Object.entries(aggregated).map(([name, value]) => ({ name, value }));
 
   return (
     <div className="chart-container">
-      <h3>Student Gender Distribution</h3>
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={320}>
         <PieChart>
           <Pie
             data={chartData}
             cx="50%"
             cy="50%"
+            outerRadius={110}
+            dataKey="value"
             labelLine={false}
             label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-            outerRadius={80}
-            fill="#8884d8"
-            dataKey="value"
           >
-            {chartData.map((entry, index) => (
+            {chartData.map((_, index) => (
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>
-          <Tooltip />
+          <Tooltip formatter={(value) => [value, 'Students']} />
           <Legend />
         </PieChart>
       </ResponsiveContainer>
